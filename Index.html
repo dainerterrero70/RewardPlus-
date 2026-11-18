@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RewardPlus</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f6fb;
+      color: #172033;
+    }
+    header {
+      background: #173b75;
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+    main {
+      max-width: 420px;
+      margin: 35px auto;
+      padding: 24px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 4px 18px #0001;
+    }
+    input, button {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 14px;
+      margin: 8px 0;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    input { border: 1px solid #ccd3df; }
+    button {
+      border: 0;
+      background: #1769d2;
+      color: white;
+      font-weight: bold;
+    }
+    button.secondary { background: #34445e; }
+    #message { overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>RewardPlus</h1>
+    <p>Gana recompensas realizando tareas</p>
+  </header>
+
+  <main>
+    <section id="auth">
+      <h2>Bienvenido</h2>
+      <p>Crea tu cuenta gratuita o inicia sesión.</p>
+      <input id="email" type="email" placeholder="Tu correo electrónico">
+      <input id="password" type="password" placeholder="Contraseña (mínimo 6 caracteres)">
+      <button id="signup">Crear cuenta</button>
+      <button id="login" class="secondary">Iniciar sesión</button>
+    </section>
+
+    <section id="account" hidden>
+      <h2>Mi cuenta</h2>
+      <p>Has iniciado sesión en RewardPlus.</p>
+      <p id="userEmail"></p>
+      <button id="logout" class="secondary">Cerrar sesión</button>
+    </section>
+
+    <p id="message" role="status"></p>
+  </main>
+
+  <script>
+    const SUPABASE_URL = "https://dahbvyrehuufkfsooyhj.supabase.co/rest/v1/";
+    const SUPABASE_KEY = "sb_publishable_xRrk43PFfnhnPYBm4DgOCA_VdQBcqmn";
+
+    const client = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+    const message = document.getElementById("message");
+    const auth = document.getElementById("auth");
+    const account = document.getElementById("account");
+
+    function showSession(session) {
+      auth.hidden = !!session;
+      account.hidden = !session;
+      document.getElementById("userEmail").textContent =
+        session ? session.user.email : "";
+    }
+
+    document.getElementById("signup").onclick = async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!email || password.length < 6) {
+        message.textContent = "Introduce un correo y una contraseña de al menos 6 caracteres.";
+        return;
+      }
+
+      message.textContent = "Creando cuenta...";
+      const { error } = await client.auth.signUp({ email, password });
+
+      message.textContent = error
+        ? error.message
+        : "Cuenta creada. Revisa tu correo para confirmar el registro.";
+    };
+
+    document.getElementById("login").onclick = async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      message.textContent = "Iniciando sesión...";
+      const { data, error } = await client.auth.signInWithPassword({
+        email, password
+      });
+
+      message.textContent = error ? error.message : "Sesión iniciada.";
+      if (data.session) showSession(data.session);
+    };
+
+    document.getElementById("logout").onclick = async () => {
+      await client.auth.signOut();
+      showSession(null);
+      message.textContent = "Has cerrado sesión.";
+    };
+
+    client.auth.getSession().then(({ data }) => {
+      showSession(data.session);
+    });
+
+    client.auth.onAuthStateChange((_event, session) => {
+      showSession(session);
+    });
+  </script>
+</body>
+  </html>
+  
