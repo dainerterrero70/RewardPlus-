@@ -111,7 +111,9 @@
       auth.hidden = !!session;
       account.hidden = !session;
       document.getElementById("userEmail").textContent =
-        session ? session.user.email : "";
+  session ? session.user.email : "";
+
+if (session) loadTasks();
     }
     async function loadTasks() {
   const { data, error } = await client
