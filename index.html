@@ -113,7 +113,41 @@
       document.getElementById("userEmail").textContent =
         session ? session.user.email : "";
     }
+    async function loadTasks() {
+  const { data, error } = await client
+    .from("tasks")
+    .select("id, title, description, reward_amount")
+    .eq("status", "active");
 
+  const list = document.getElementById("tasksList");
+
+  if (error) {
+    list.textContent = "No se pudieron cargar las tareas.";
+    console.error(error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    list.textContent = "Todavía no hay tareas disponibles.";
+    return;
+  }
+
+  list.innerHTML = "";
+
+  data.forEach(task => {
+    const item = document.createElement("div");
+    const title = document.createElement("h4");
+    const description = document.createElement("p");
+    const reward = document.createElement("p");
+
+    title.textContent = task.title;
+    description.textContent = task.description || "";
+    reward.textContent = "Recompensa: " + task.reward_amount + " USDT";
+
+    item.append(title, description, reward);
+    list.appendChild(item);
+  });
+      }
     document.getElementById("signup").onclick = async () => {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
